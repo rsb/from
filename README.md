@@ -1,4 +1,4 @@
-# From
+# To
 Casting from one type to another in golang.
 
 The primary reason for this package is the need to cast string values into
