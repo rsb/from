@@ -17,7 +17,7 @@ type Number interface {
 }
 
 var (
-	NegativeNumberFailure = failure.InvalidParam("negative numbers permitted")
+	NegativeNumberFailure = failure.InvalidParam("negative numbers are not permitted")
 )
 
 func Int[T constraints.Signed](i any) (T, error) {
@@ -58,7 +58,7 @@ func Int[T constraints.Signed](i any) (T, error) {
 		}
 		return T(v), nil
 	case json.Number:
-		v, err := Int(string(s))
+		v, err := Int[T](string(s))
 		if err != nil {
 			return 0, failure.ToInvalidParam(err, "Int failed for json.Number (%v)", i)
 		}
@@ -138,7 +138,7 @@ func Uint[T constraints.Unsigned](i any) (T, error) {
 		}
 		return T(v), nil
 	case json.Number:
-		v, err := Uint(string(s))
+		v, err := Uint[T](string(s))
 		if err != nil {
 			return 0, failure.ToInvalidParam(err, "Int failed for json.Number (%v)", i)
 		}
