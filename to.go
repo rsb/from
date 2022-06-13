@@ -2,6 +2,7 @@
 package to
 
 import (
+	"encoding/json"
 	"reflect"
 	"strconv"
 	"time"
@@ -46,6 +47,12 @@ func Int(i any) (int, error) {
 			return 0, failure.ToInvalidParam(err, "unable to cast %#v of type %T to int64", i, i)
 		}
 		return int(v), nil
+	case json.Number:
+		v, err := Int(string(s))
+		if err != nil {
+			return 0, failure.ToInvalidParam(err, "Int failed for json.Number (%v)", i)
+		}
+		return v, nil
 	case bool:
 		if s {
 			return 1, nil
