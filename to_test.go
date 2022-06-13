@@ -82,7 +82,7 @@ func TestUint_Success(t *testing.T) {
 		},
 		{
 			name:     "float64",
-			in:       float32(8.8),
+			in:       8.8,
 			expected: uint(8),
 		},
 		{
