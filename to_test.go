@@ -8,13 +8,32 @@ import (
 	"testing"
 )
 
-type testStep struct {
-	input  interface{}
-	expect interface{}
-	isErr  bool
+func TestUint_SingleIndirect(t *testing.T) {
+	t.Parallel()
+	var foo int32
+
+	foo = int32(100)
+
+	out, err := to.Uint[uint](&foo)
+	require.NoError(t, err)
+	require.Equal(t, uint(100), out)
+}
+
+func TestUint_FourLevelsOfIndirect(t *testing.T) {
+	t.Parallel()
+	var foo int32
+
+	foo = int32(100)
+	bar := &foo
+	baz := &bar
+	biz := &baz
+	out, err := to.Uint[uint](&biz)
+	require.NoError(t, err)
+	require.Equal(t, uint(100), out)
 }
 
 func TestUint_Success(t *testing.T) {
+	t.Parallel()
 	var jEight json.Number
 
 	err := json.Unmarshal([]byte("8"), &jEight)
