@@ -6,6 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"testing"
+	"time"
 )
 
 func TestUint_SingleIndirect(t *testing.T) {
@@ -44,6 +45,46 @@ func TestUint_Success(t *testing.T) {
 		in       any
 		expected uint
 	}{
+		{
+			name:     "Sunday",
+			in:       time.Sunday,
+			expected: uint(0),
+		},
+		{
+			name:     "Monday",
+			in:       time.Monday,
+			expected: uint(1),
+		},
+		{
+			name:     "Tuesday",
+			in:       time.Tuesday,
+			expected: uint(2),
+		},
+		{
+			name:     "Wednesday",
+			in:       time.Wednesday,
+			expected: uint(3),
+		},
+		{
+			name:     "Thursday",
+			in:       time.Thursday,
+			expected: uint(4),
+		},
+		{
+			name:     "Friday",
+			in:       time.Friday,
+			expected: uint(5),
+		},
+		{
+			name:     "Saturday",
+			in:       time.Saturday,
+			expected: uint(6),
+		},
+		{
+			name:     "January",
+			in:       time.January,
+			expected: uint(1),
+		},
 		{
 			name:     "int",
 			in:       8,
