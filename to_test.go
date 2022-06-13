@@ -5,9 +5,7 @@ import (
 	to "github.com/rsb/from"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"reflect"
 	"testing"
-	"time"
 )
 
 type testStep struct {
@@ -16,18 +14,129 @@ type testStep struct {
 	isErr  bool
 }
 
-func TestUint_Failures(t *testing.T) {
-	var jMinusEight json.Number
-	err := json.Unmarshal([]byte("-8"), &jMinusEight)
+func TestUint_Success(t *testing.T) {
+	var jEight json.Number
+
+	err := json.Unmarshal([]byte("8"), &jEight)
 	require.NoError(t, err)
 
-	var uknown struct{ foo string }
+	cases := []struct {
+		name     string
+		in       any
+		expected uint
+	}{
+		{
+			name:     "int",
+			in:       8,
+			expected: uint(8),
+		},
+		{
+			name:     "int8",
+			in:       int8(8),
+			expected: uint(8),
+		},
+		{
+			name:     "int16",
+			in:       int16(8),
+			expected: uint(8),
+		},
+		{
+			name:     "int32",
+			in:       int32(8),
+			expected: uint(8),
+		},
+		{
+			name:     "int64",
+			in:       int64(8),
+			expected: uint(8),
+		},
+		{
+			name:     "uint",
+			in:       uint(8),
+			expected: uint(8),
+		},
+		{
+			name:     "uint8",
+			in:       uint8(8),
+			expected: uint(8),
+		},
+		{
+			name:     "uint16",
+			in:       uint16(8),
+			expected: uint(8),
+		},
+		{
+			name:     "uint32",
+			in:       uint32(8),
+			expected: uint(8),
+		},
+		{
+			name:     "uint64",
+			in:       uint64(8),
+			expected: uint(8),
+		},
+		{
+			name:     "float32",
+			in:       float32(8.8),
+			expected: uint(8),
+		},
+		{
+			name:     "float64",
+			in:       float32(8.8),
+			expected: uint(8),
+		},
+		{
+			name:     "json.Number 8",
+			in:       jEight,
+			expected: uint(8),
+		},
+		{
+			name:     "bool true",
+			in:       true,
+			expected: uint(1),
+		},
+		{
+			name:     "bool false",
+			in:       false,
+			expected: uint(0),
+		},
+		{
+			name:     "nil",
+			in:       nil,
+			expected: uint(0),
+		},
+	}
+
+	for _, tt := range cases {
+		t.Run(tt.name, func(t *testing.T) {
+			out, err := to.Uint[uint](tt.in)
+			require.NoError(t, err)
+			require.Equal(t, tt.expected, out)
+		})
+	}
+}
+
+func TestUint_Failures(t *testing.T) {
+	t.Parallel()
+
+	var jMinusEight, jEightDotEight json.Number
+	err := json.Unmarshal([]byte("-8"), &jMinusEight)
+	require.NoError(t, err)
+	err = json.Unmarshal([]byte("8.8"), &jEightDotEight)
+	require.NoError(t, err)
+
+	var uKnown struct{ foo string }
 	negativeFailureMsg := to.NegativeNumberFailure.Error()
 	cases := []struct {
 		name string
 		in   any
 		msg  string
 	}{
+		{
+			name: "int negative number failure",
+			in:   -1,
+			msg:  negativeFailureMsg,
+		},
 		{
 			name: "int8 negative number failure",
 			in:   int8(-1),
@@ -69,8 +178,13 @@ func TestUint_Failures(t *testing.T) {
 			msg:  negativeFailureMsg,
 		},
 		{
+			name: "json float",
+			in:   jEightDotEight,
+			msg:  "Uint failed for json.Number (8.8)",
+		},
+		{
 			name: "unknown type",
-			in:   uknown,
+			in:   uKnown,
 			msg:  "unable to cast struct",
 		},
 	}
@@ -84,56 +198,4 @@ func TestUint_Failures(t *testing.T) {
 		})
 	}
 
-}
-
-func createNumberTestStepsSuccess(zero, one, eight, eightNegative, eightPoint31, eightPoint31Negative interface{}) []testStep {
-	var jEight, jMinusEight, jFloatEight json.Number
-	_ = json.Unmarshal([]byte("8"), &jEight)
-	_ = json.Unmarshal([]byte("-8"), &jMinusEight)
-	_ = json.Unmarshal([]byte("8.0"), &jFloatEight)
-
-	kind := reflect.TypeOf(zero).Kind()
-	isUint := kind == reflect.Uint || kind == reflect.Uint8 || kind == reflect.Uint16 || kind == reflect.Uint32 || kind == reflect.Uint64
-
-	// Some precision is lost when converting from float64 to float32.
-	eightPoint3132 := eightPoint31
-	eightPoint31Negative32 := eightPoint31Negative
-	if kind == reflect.Float64 {
-		eightPoint3132 = float64(float32(eightPoint31.(float64)))
-		eightPoint31Negative32 = float64(float32(eightPoint31Negative.(float64)))
-	}
-
-	return []testStep{
-		{int(8), eight, false},
-		{int8(8), eight, false},
-		{int16(8), eight, false},
-		{int32(8), eight, false},
-		{int64(8), eight, false},
-		{time.Weekday(8), eight, false},
-		{time.Month(8), eight, false},
-		{uint(8), eight, false},
-		{uint8(8), eight, false},
-		{uint16(8), eight, false},
-		{uint32(8), eight, false},
-		{uint64(8), eight, false},
-		{float32(8.31), eightPoint3132, false},
-		{float64(8.31), eightPoint31, false},
-		{true, one, false},
-		{false, zero, false},
-		{"8", eight, false},
-		{nil, zero, false},
-		{int(-8), eightNegative, isUint},
-		{int8(-8), eightNegative, isUint},
-		{int16(-8), eightNegative, isUint},
-		{int32(-8), eightNegative, isUint},
-		{int64(-8), eightNegative, isUint},
-		{float32(-8.31), eightPoint31Negative32, isUint},
-		{float64(-8.31), eightPoint31Negative, isUint},
-		{"-8", eightNegative, isUint},
-		{jEight, eight, false},
-		{jMinusEight, eightNegative, isUint},
-		{jFloatEight, eight, false},
-		{"test", zero, true},
-		{testing.T{}, zero, true},
-	}
 }

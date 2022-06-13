@@ -140,7 +140,7 @@ func Uint[T constraints.Unsigned](i any) (T, error) {
 	case json.Number:
 		v, err := Uint[T](string(s))
 		if err != nil {
-			return 0, failure.ToInvalidParam(err, "Int failed for json.Number (%v)", i)
+			return 0, failure.ToInvalidParam(err, "Uint failed for json.Number (%v)", i)
 		}
 		return v, nil
 	case bool:
