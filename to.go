@@ -12,10 +12,6 @@ import (
 	"golang.org/x/exp/constraints"
 )
 
-type Number interface {
-	int | int8
-}
-
 var (
 	NegativeNumberFailure = failure.InvalidParam("negative numbers are not permitted")
 )
@@ -210,10 +206,14 @@ func Float[T constraints.Float](i any) (T, error) {
 	}
 }
 
+func String(v any) (string, error) {
+	return "", nil
+}
+
 // integer returns the int value of v if v or v's underlying type
 // is an int.
 // Note that this will return false for int64 etc. types.
-func integer(v interface{}) (int, bool) {
+func integer(v any) (int, bool) {
 	switch v := v.(type) {
 	case int:
 		return v, true
@@ -251,7 +251,7 @@ func indirect(a any) any {
 // indirectToStringerOrError returns the value, after de-referencing as many times
 // as necessary to reach the base type (or nil) or an implementation of fmt.Stringer
 // or error,
-func indirectToStringerOrError(a interface{}) interface{} {
+func indirectToStringerOrError(a any) interface{} {
 	if a == nil {
 		return nil
 	}
