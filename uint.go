@@ -6,18 +6,16 @@ import (
 	"golang.org/x/exp/constraints"
 	"reflect"
 	"strconv"
-	"time"
 )
 
-type IntData[T constraints.Signed] struct {
+type UintData[T constraints.Unsigned] struct {
 	item     *T
-	sValue   string
 	typeName string
 }
 
-func NewIntData[T constraints.Signed](v *T) IntData[T] {
+func NewUintData[T constraints.Unsigned](v *T) UintData[T] {
 	t := reflect.TypeOf(v)
-	n := IntData[T]{
+	n := UintData[T]{
 		item:     v,
 		typeName: t.Name(),
 	}
@@ -25,12 +23,12 @@ func NewIntData[T constraints.Signed](v *T) IntData[T] {
 	return n
 }
 
-func (d *IntData[T]) Item() *T {
+func (d *UintData[T]) Item() *T {
 	return d.item
 }
 
-func (d *IntData[T]) Set(v string) error {
-	i, err := Int[T](v)
+func (d *UintData[T]) Set(v string) error {
+	i, err := Uint[T](v)
 	if err != nil {
 		return failure.Wrap(err, "Int[%v] failed", d.typeName)
 	}
@@ -39,30 +37,46 @@ func (d *IntData[T]) Set(v string) error {
 	return nil
 }
 
-func (d *IntData[T]) Type() string {
+func (d *UintData[T]) Type() string {
 	return d.typeName
 }
 
-func (d *IntData[T]) String() string {
+func (d *UintData[T]) String() string {
 	return String(d.item)
 }
 
-func Int[T constraints.Signed](i any) (T, error) {
+func Uint[T constraints.Unsigned](i any) (T, error) {
 	i = indirect(i)
 
 	v, ok := integer(i)
 	if ok {
+		if v < 0 {
+			return 0, NegativeNumberFailure
+		}
+
 		return T(v), nil
 	}
 
 	switch s := i.(type) {
 	case int8:
+		if s < 0 {
+			return 0, NegativeNumberFailure
+		}
 		return T(s), nil
 	case int16:
+		if s < 0 {
+			return 0, NegativeNumberFailure
+		}
 		return T(s), nil
 	case int32:
+		if s < 0 {
+			return 0, NegativeNumberFailure
+		}
 		return T(s), nil
 	case int64:
+		if s < 0 {
+			return 0, NegativeNumberFailure
+		}
 		return T(s), nil
 	case uint:
 		return T(s), nil
@@ -75,19 +89,28 @@ func Int[T constraints.Signed](i any) (T, error) {
 	case uint64:
 		return T(s), nil
 	case float32:
+		if s < 0 {
+			return 0, NegativeNumberFailure
+		}
 		return T(s), nil
 	case float64:
+		if s < 0 {
+			return 0, NegativeNumberFailure
+		}
 		return T(s), nil
 	case string:
 		v, err := strconv.ParseInt(s, 0, 0)
 		if err != nil {
-			return 0, failure.ToInvalidParam(err, "unable to cast %#v of type %T to int64", i, i)
+			return 0, failure.ToInvalidParam(err, "unable to cast %#v of type %T to uint", i, i)
+		}
+		if v < 0 {
+			return 0, NegativeNumberFailure
 		}
 		return T(v), nil
 	case json.Number:
-		v, err := Int[T](string(s))
+		v, err := Uint[T](string(s))
 		if err != nil {
-			return 0, failure.ToInvalidParam(err, "Int failed for json.Number (%v)", i)
+			return 0, failure.ToInvalidParam(err, "Uint failed for json.Number (%v)", i)
 		}
 		return v, nil
 	case bool:
@@ -99,21 +122,5 @@ func Int[T constraints.Signed](i any) (T, error) {
 		return 0, nil
 	default:
 		return 0, failure.InvalidParam("unable to cast %#v of type %T to int", i, i)
-	}
-}
-
-// integer returns the int value of v if v or v's underlying type
-// is an int.
-// Note that this will return false for int64 etc. types.
-func integer(v any) (int, bool) {
-	switch v := v.(type) {
-	case int:
-		return v, true
-	case time.Weekday:
-		return int(v), true
-	case time.Month:
-		return int(v), true
-	default:
-		return 0, false
 	}
 }
